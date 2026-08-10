@@ -7,15 +7,29 @@ name: buzzengine
 
 on:
   schedule:
-    # Every 4 hours. GitHub queues cron on a best-effort basis and can run it
-    # late under load — fine for a bot with a 3-hour minimum spacing anyway.
-    - cron: "0 */4 * * *"
+    # Three times a day, in UTC (GitHub cron has no timezone support).
+    # Chosen to spread across the audience's waking hours rather than sit in
+    # one block: 09:30 / 17:30 / 22:30 IST, which is also 00:00 / 08:00 / 13:00 ET.
+    # GitHub queues cron on a best-effort basis and can fire late under load;
+    # the 3-hour minimum spacing between posts absorbs that.
+    - cron: "0 4 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 17 * * *"
+  # Manual trigger — the "Run workflow" button on the Actions tab.
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Draft without publishing"
+        description: "Dry run — draft it but publish nothing"
         type: boolean
         default: true
+      publish_now:
+        description: "Publish straight to X instead of adding to Buffer's queue"
+        type: boolean
+        default: false
+      ignore_cadence:
+        description: "Ignore the daily cap and minimum spacing (for testing)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -63,7 +77,14 @@ jobs:
           SOURCES: ${{ secrets.SOURCES || 'hn,github' }}
           TOPICS: ${{ secrets.TOPICS }}
           QUALITY_THRESHOLD: ${{ secrets.QUALITY_THRESHOLD || '7' }}
-          MAX_POSTS_PER_DAY: ${{ secrets.MAX_POSTS_PER_DAY || '3' }}
+
+          # Manual-only overrides. `inputs.*` is empty on a scheduled run, so
+          # every branch below falls through to the safe value automatically.
+          # ignore_cadence has to lift BOTH limits — the daily cap alone would
+          # still block a manual run once three posts have gone out.
+          BUFFER_PUBLISH_NOW: ${{ inputs.publish_now && '1' || '0' }}
+          MIN_MINUTES_BETWEEN_POSTS: ${{ inputs.ignore_cadence && '0' || '180' }}
+          MAX_POSTS_PER_DAY: ${{ inputs.ignore_cadence && '99' || secrets.MAX_POSTS_PER_DAY || '3' }}
         run: node src/index.ts
 
       - name: Persist dedupe memory
