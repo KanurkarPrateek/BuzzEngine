@@ -1,0 +1,82 @@
+# BuzzEngine runs here — no server, no Docker, no cost.
+#
+# Buffer is what makes this work as a plain scheduled job: there are no X
+# credentials and no rotating refresh token, so the only state that has to
+# survive between runs is the dedupe memory, which is committed back to the repo.
+name: buzzengine
+
+on:
+  schedule:
+    # Every 4 hours. GitHub queues cron on a best-effort basis and can run it
+    # late under load — fine for a bot with a 3-hour minimum spacing anyway.
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Draft without publishing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buzzengine
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Run one cycle
+        env:
+          # Manual runs default to dry; the schedule publishes.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+          STATE_DIR: ./state
+          LOG_FORMAT: json
+
+          # Everything sensitive is a repository *secret*, never a variable:
+          # GitHub masks secret values wherever they appear in logs, while
+          # variables are stored and printed in plain text.
+          PUBLISH_MODE: buffer
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER || 'openai' }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MAX_TOKENS: ${{ secrets.LLM_MAX_TOKENS || '8000' }}
+
+          # Optional — the Reddit source stays silent without these, because
+          # Reddit blocks unauthenticated JSON from datacenter IPs like Actions.
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+
+          SOURCES: ${{ secrets.SOURCES || 'hn,github' }}
+          TOPICS: ${{ secrets.TOPICS }}
+          QUALITY_THRESHOLD: ${{ secrets.QUALITY_THRESHOLD || '7' }}
+          MAX_POSTS_PER_DAY: ${{ secrets.MAX_POSTS_PER_DAY || '3' }}
+        run: node src/index.ts
+
+      - name: Persist dedupe memory
+        # Committing state back is what stops the bot re-posting the same story
+        # on the next run — Actions gives each job a clean filesystem.
+        if: always()
+        run: |
+          git config user.name "buzzengine"
+          git config user.email "buzzengine@users.noreply.github.com"
+          git add state/seen.json state/history.jsonl 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "no state changes"
+          else
+            git commit -m "chore: agent state [skip ci]"
+            git push
+          fi

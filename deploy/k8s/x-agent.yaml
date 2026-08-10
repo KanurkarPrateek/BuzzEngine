@@ -1,0 +1,103 @@
+# Kubernetes deployment: a CronJob runs one cycle on a schedule, and a PVC
+# carries the state (dedupe memory, post history, rotated X refresh token)
+# between runs.
+#
+#   kubectl apply -f deploy/k8s/x-agent.yaml
+#
+# Seed the refresh token once, from a laptop that ran `npm run authorize`:
+#   kubectl -n x-agent create secret generic x-agent \
+#     --from-literal=LLM_API_KEY=... \
+#     --from-literal=X_CLIENT_ID=... \
+#     --from-literal=X_REFRESH_TOKEN=...
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: x-agent
+---
+# The PVC must be ReadWriteOnce and durable: X rotates the refresh token on
+# every run, so losing this volume means re-running the browser authorization.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: x-agent-state
+  namespace: x-agent
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: x-agent-config
+  namespace: x-agent
+data:
+  STATE_DIR: "/data"
+  LOG_FORMAT: "json"
+  LOG_LEVEL: "info"
+  DRY_RUN: "1" # flip to "0" after reviewing a week of drafts
+  LLM_PROVIDER: "anthropic"
+  LLM_MODEL: "claude-opus-5"
+  SOURCES: "hn,github,reddit,x"
+  MAX_POSTS_PER_DAY: "3"
+  MIN_MINUTES_BETWEEN_POSTS: "180"
+  INCLUDE_LINK_IN_POST: "true"
+  TOPICS: "ai,llm,agents,developer tools,observability,infrastructure,open source,databases,security"
+  # Uncomment if GitHub/Reddit start blocking the cluster's egress IP.
+  # TRAWL_URL: "http://trawl.x-agent.svc.cluster.local:8191"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: x-agent
+  namespace: x-agent
+spec:
+  schedule: "0 */4 * * *"
+  timeZone: "Etc/UTC"
+  # The PVC is ReadWriteOnce and the state files are not written concurrently,
+  # so never let two cycles run at once.
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 900
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: x-agent
+              image: x-agent:latest
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - configMapRef:
+                    name: x-agent-config
+                - secretRef:
+                    name: x-agent
+              volumeMounts:
+                - name: state
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: x-agent-state

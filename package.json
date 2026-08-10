@@ -1,0 +1,27 @@
+{
+  "name": "buzzengine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Autonomous tech-news bot: collects signal from HN/GitHub/Reddit/X, drafts a post with any LLM, and publishes to X.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "authorize": "node src/scripts/authorize.ts",
+    "start": "node src/index.ts",
+    "once": "node src/index.ts",
+    "dry": "DRY_RUN=1 node src/index.ts",
+    "daemon": "SCHEDULE=1 node src/index.ts",
+    "probe:sources": "node src/scripts/probe-sources.ts",
+    "probe:llm": "node src/scripts/probe-llm.ts",
+    "typecheck": "tsc --noEmit",
+    "probe:notify": "node src/scripts/probe-notify.ts",
+    "probe:buffer": "node src/scripts/probe-buffer.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

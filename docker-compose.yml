@@ -1,0 +1,27 @@
+services:
+  x-agent:
+    build: .
+    image: x-agent:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Long-lived container mode: the process stays up and paces itself.
+      SCHEDULE: "1"
+      SCHEDULE_INTERVAL_MINUTES: "240"
+      STATE_DIR: /data
+      LOG_FORMAT: json
+    volumes:
+      - x-agent-state:/data
+
+  # Optional. Only start this if GitHub trending or public Reddit begin
+  # returning 403/429 from your host's IP — the bot ignores it otherwise.
+  # Enable with: docker compose --profile scraping up -d
+  trawl:
+    image: ghcr.io/germondai/trawl:latest
+    profiles: ["scraping"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8191:8191"
+
+volumes:
+  x-agent-state:
