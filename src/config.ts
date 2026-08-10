@@ -219,11 +219,19 @@ export const config = {
     /** 0 keeps the account clean. Raise to 1–2 if you want discovery tags. */
     maxHashtags: num("MAX_HASHTAGS", 0),
     /**
-     * Minimum score (1–10) required in EVERY editorial category to publish.
-     * 8 is the strict reading of "silence beats low quality" and will post
-     * rarely; 7 posts regularly while still rejecting filler.
+     * Minimum score (1–10) for the taste criteria — funny, interesting,
+     * memorable and so on. Deliberately lenient: a merely-okay post is worth
+     * publishing, and holding out for brilliance means posting nothing.
      */
-    qualityThreshold: num("QUALITY_THRESHOLD", 7),
+    qualityThreshold: num("QUALITY_THRESHOLD", 5),
+    /**
+     * Minimum score for accuracy, kept separate and high.
+     *
+     * Taste is subjective and a dull post costs nothing. An invented fact
+     * published under a real name is the one failure that actually matters,
+     * so it never trades against "we need something to post today".
+     */
+    accuracyThreshold: num("ACCURACY_THRESHOLD", 8),
     /** Fetch the primary source (README, article text) before writing. */
     research: bool("RESEARCH", true),
   },
@@ -231,8 +239,15 @@ export const config = {
   limits: {
     maxPostsPerDay: num("MAX_POSTS_PER_DAY", 3),
     minMinutesBetweenPosts: num("MIN_MINUTES_BETWEEN_POSTS", 180),
-    /** Number of ranked candidates handed to the drafting stage before we give up. */
-    draftAttempts: num("DRAFT_ATTEMPTS", 3),
+    /**
+     * Ranked candidates tried per run before giving up.
+     *
+     * A run ranks ~80 candidates; stopping after three was the main reason a
+     * slot produced nothing. The loop exits the moment one clears the gate, so
+     * a high value only costs anything on runs that would otherwise post
+     * nothing at all.
+     */
+    draftAttempts: num("DRAFT_ATTEMPTS", 6),
     /** How long a story stays in the dedupe memory. */
     seenRetentionDays: num("SEEN_RETENTION_DAYS", 45),
     /**

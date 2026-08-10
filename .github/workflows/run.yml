@@ -7,14 +7,11 @@ name: buzzengine
 
 on:
   schedule:
-    # Three times a day, in UTC (GitHub cron has no timezone support).
-    # Chosen to spread across the audience's waking hours rather than sit in
-    # one block: 09:30 / 17:30 / 22:30 IST, which is also 00:00 / 08:00 / 13:00 ET.
-    # GitHub queues cron on a best-effort basis and can fire late under load;
-    # the 3-hour minimum spacing between posts absorbs that.
-    - cron: "0 4 * * *"
-    - cron: "0 12 * * *"
-    - cron: "0 17 * * *"
+    # Five attempts a day for three posts, so a run that finds nothing
+    # publishable still leaves two spare slots. MAX_POSTS_PER_DAY is what caps
+    # output; once three are out, later runs exit before any LLM call.
+    # 09:30 / 13:30 / 17:30 / 21:30 / 01:30 IST.
+    - cron: "0 4,8,12,16,20 * * *"
   # Manual trigger — the "Run workflow" button on the Actions tab.
   workflow_dispatch:
     inputs:
@@ -41,7 +38,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 

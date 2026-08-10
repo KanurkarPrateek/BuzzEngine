@@ -114,8 +114,13 @@ export async function gate(draft: Draft, candidate: ScoredCandidate): Promise<Ve
 
   // Enforce the threshold in code rather than trusting the model's own
   // arithmetic against it.
+  // Accuracy is judged against its own, higher bar — see config.
   const failing = scores
-    ? SCORE_FIELDS.filter((f) => scores[f] < config.editorial.qualityThreshold)
+    ? SCORE_FIELDS.filter((f) => {
+        const floor =
+          f === "accurate" ? config.editorial.accuracyThreshold : config.editorial.qualityThreshold;
+        return scores[f] < floor;
+      })
     : [];
 
   let approved = Boolean(verdict.approved) && failing.length === 0;
