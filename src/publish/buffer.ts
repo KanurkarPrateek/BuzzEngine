@@ -112,10 +112,19 @@ export type BufferPostResult = {
   dueAt?: string;
 };
 
-export async function createPost(text: string): Promise<BufferPostResult> {
+export async function createPost(
+  text: string,
+  imageUrls: string[] = [],
+): Promise<BufferPostResult> {
   const channelId = await resolveChannelId();
 
   const input: Record<string, unknown> = { text, channelId };
+
+  // Buffer attaches images by public URL — there is no upload step. X caps a
+  // post at 4 images, so anything beyond that is dropped rather than rejected.
+  if (imageUrls.length > 0) {
+    input.assets = imageUrls.slice(0, 4).map((url) => ({ image: { url } }));
+  }
   if (config.buffer.publishNow) {
     // Goes out to X immediately, bypassing the queue. No review window.
     input.mode = "shareNow";
@@ -151,6 +160,10 @@ export async function createPost(text: string): Promise<BufferPostResult> {
     throw new Error(`buffer returned an unexpected createPost payload: ${JSON.stringify(data)}`);
   }
 
-  log.info("queued in buffer", { postId: result.post.id, dueAt: result.post.dueAt });
+  log.info("queued in buffer", {
+    postId: result.post.id,
+    dueAt: result.post.dueAt,
+    images: imageUrls.length,
+  });
   return { id: result.post.id, dueAt: result.post.dueAt };
 }

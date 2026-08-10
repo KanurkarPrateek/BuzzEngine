@@ -136,6 +136,8 @@ export const config = {
     /** Any service returning raw image bytes for a GET. `{url}` is substituted. */
     screenshotUrlTemplate: process.env.SCREENSHOT_URL_TEMPLATE || undefined,
     altText: bool("MEDIA_ALT_TEXT", true),
+    /** X allows at most 4 images on a post. */
+    maxImages: num("MEDIA_MAX_IMAGES", 1),
   },
 
   sources: {
@@ -233,6 +235,12 @@ export const config = {
     draftAttempts: num("DRAFT_ATTEMPTS", 3),
     /** How long a story stays in the dedupe memory. */
     seenRetentionDays: num("SEEN_RETENTION_DAYS", 45),
+    /**
+     * Days before the account may cover the same subject again — the same
+     * repo, the same org, or the same company's site. Distinct from URL
+     * dedupe, which only catches the identical story.
+     */
+    subjectCooldownDays: num("SUBJECT_COOLDOWN_DAYS", 7),
   },
 } as const;
 

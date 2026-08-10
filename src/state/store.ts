@@ -9,6 +9,8 @@ export type SeenEntry = {
   title: string;
   candidateId: string;
   at: number;
+  /** What the post was about — see pipeline/subjects.ts. */
+  subjects?: string[];
 };
 
 const SEEN_FILE = () => join(config.stateDir, "seen.json");

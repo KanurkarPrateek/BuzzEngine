@@ -1,5 +1,6 @@
 import { config } from "./config.ts";
 import { selectImage } from "./media/index.ts";
+import { selectAttachableImages } from "./media/urls.ts";
 import { getNotifier } from "./notify/index.ts";
 import { createPost } from "./publish/buffer.ts";
 import { buildIntentUrl } from "./publish/intent.ts";
@@ -17,10 +18,11 @@ import {
   readHistory,
   recordSeen,
 } from "./state/store.ts";
+import { subjectsOf } from "./pipeline/subjects.ts";
 import { canonicalUrl } from "./util/text.ts";
 import { log } from "./util/log.ts";
 import { sleep } from "./util/http.ts";
-import type { HistoryEntry } from "./types.ts";
+import type { HistoryEntry, ScoredCandidate } from "./types.ts";
 
 type RunOutcome = "posted" | "skipped" | "paused" | "rate-limited" | "no-candidates";
 
@@ -95,7 +97,7 @@ export async function runOnce(): Promise<RunOutcome> {
 
       if (!verdict.approved) {
         // Burn the candidate so the next cycle doesn't retry the same dead end.
-        markSeen(candidate.id, candidate.title, candidate.url);
+        markSeen(candidate);
         continue;
       }
       text = verdict.revised ?? drafted.post;
@@ -134,20 +136,35 @@ export async function runOnce(): Promise<RunOutcome> {
         intentUrl: config.publishMode === "notify" ? entry.intentUrl : undefined,
       });
       appendHistory(entry);
-      markSeen(candidate.id, candidate.title, candidate.url);
+      markSeen(candidate);
       return "posted";
     }
 
     if (config.publishMode === "buffer") {
+      // Buffer attaches images by public URL, so unlike the X API path there is
+      // nothing to download or upload — just addresses Buffer can reach.
+      // Failing to find one is never a reason to lose the post.
+      // A link in the post means X renders its own card, so only a genuinely
+      // different image is worth attaching — see selectAttachableImages.
+      const imageUrls =
+        config.media.mode === "off"
+          ? []
+          : await selectAttachableImages(
+              candidate.url,
+              config.media.maxImages,
+              config.editorial.linkMode === "main",
+            ).catch(() => []);
+
       // Buffer publishes to X on our behalf, so no X credentials are involved
       // and the link carries no surcharge.
       const queued = await createPost(
         config.editorial.linkMode === "main" ? `${text}\n\n${candidate.url}` : text,
+        imageUrls,
       );
 
       entry.bufferPostId = queued.id;
       appendHistory(entry);
-      markSeen(candidate.id, candidate.title, candidate.url);
+      markSeen(candidate);
 
       log.info("done — queued in Buffer", { postId: queued.id, dueAt: queued.dueAt ?? "next slot" });
       return "posted";
@@ -166,7 +183,7 @@ export async function runOnce(): Promise<RunOutcome> {
 
       entry.intentUrl = intentUrl;
       appendHistory(entry);
-      markSeen(candidate.id, candidate.title, candidate.url);
+      markSeen(candidate);
 
       log.info("done — sent for review", { channel: config.notify.channel });
       return "posted";
@@ -175,7 +192,7 @@ export async function runOnce(): Promise<RunOutcome> {
     const result = await publish(text, candidate.url, altText);
     entry.tweetId = result.tweetId;
     appendHistory(entry);
-    markSeen(candidate.id, candidate.title, candidate.url);
+    markSeen(candidate);
 
     log.info("done", { url: `https://x.com/i/status/${result.tweetId}` });
     return "posted";
@@ -193,8 +210,14 @@ function hostOf(url: string): string {
   }
 }
 
-function markSeen(candidateId: string, title: string, url: string): void {
-  recordSeen({ candidateId, title, urlKey: canonicalUrl(url), at: Date.now() });
+function markSeen(candidate: ScoredCandidate): void {
+  recordSeen({
+    candidateId: candidate.id,
+    title: candidate.title,
+    urlKey: canonicalUrl(candidate.url),
+    at: Date.now(),
+    subjects: subjectsOf(candidate),
+  });
 }
 
 async function main(): Promise<void> {

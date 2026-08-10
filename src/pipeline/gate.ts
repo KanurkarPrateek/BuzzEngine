@@ -61,6 +61,18 @@ export async function gate(draft: Draft, candidate: ScoredCandidate): Promise<Ve
     log.info("gate: fixable issues, asking the editor to revise", { reasons: hard.fixable });
   }
 
+  // Deterministic dedupe only catches the *same* story. Two different repos
+  // making the same point, or the same joke told about a new subject, need
+  // judgement — so the editor sees what was recently published and rules on it.
+  const recent = readHistory().slice(-10);
+  const recentBlock = recent.length
+    ? [
+        "",
+        "RECENTLY PUBLISHED (most recent last) — the account must not repeat itself:",
+        ...recent.map((h) => `- [${h.title.slice(0, 60)}] ${h.post.replace(/\n+/g, " / ")}`),
+      ].join("\n")
+    : "";
+
   const material = [
     "SOURCE MATERIAL (this is exactly what the writer was given — judge accuracy against it):",
     buildMaterial(candidate),
@@ -69,6 +81,7 @@ export async function gate(draft: Draft, candidate: ScoredCandidate): Promise<Ve
     draft.post,
     "",
     `THE WRITER'S STATED ANGLE: ${draft.angle}`,
+    recentBlock,
     hard.fixable.length
       ? [
           "",
@@ -186,6 +199,12 @@ function applyHardRules(draft: Draft): HardRuleResult {
   // The phrases that make an account read as generated. Deterministic, so
   // there's no reason to spend a model call deciding — but they're a rewrite,
   // not a reason to bin an otherwise good observation.
+  // A wall of prose reads as generated no matter how good the observation is.
+  // Short posts can legitimately be one line; longer ones need beats.
+  if (post.length > 120 && !post.includes("\n")) {
+    fixable.push("single block of prose — needs 2-4 short beats separated by blank lines");
+  }
+
   const tells = AI_TELLS.filter((p) => post.toLowerCase().includes(p));
   if (tells.length) {
     fixable.push(`uses AI-sounding phrasing: ${tells.map((t) => `"${t}"`).join(", ")}`);
@@ -202,8 +221,10 @@ function applyHardRules(draft: Draft): HardRuleResult {
   );
   if (blocked.length) fatal.push(`contains blocked terms: ${blocked.join(", ")}`);
 
-  const recent = readHistory().slice(-20);
-  const similar = recent.find((h) => titleSimilarity(h.post, post) >= 0.55);
+  // 0.55 was too permissive: two posts about the same repo worded differently
+  // scored well under it and both went out.
+  const recentPosts = readHistory().slice(-20);
+  const similar = recentPosts.find((h) => titleSimilarity(h.post, post) >= 0.4);
   if (similar) fatal.push(`too similar to a recent post: "${similar.post.slice(0, 60)}..."`);
 
   return { fatal, fixable };
