@@ -11,6 +11,12 @@
       "title": "Docker Sandboxes – Disposable, isolated sandboxes for AI agents",
       "urlKey": "https://docker.com/products/docker-sandboxes",
       "at": 1786362300467
+    },
+    {
+      "candidateId": "github:msitarzewski/agency-agents",
+      "title": "msitarzewski/agency-agents",
+      "urlKey": "https://github.com/msitarzewski/agency-agents",
+      "at": 1786362727469
     }
   ]
 }
