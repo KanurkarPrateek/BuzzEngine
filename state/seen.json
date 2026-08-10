@@ -17,6 +17,15 @@
       "title": "msitarzewski/agency-agents",
       "urlKey": "https://github.com/msitarzewski/agency-agents",
       "at": 1786362727469
+    },
+    {
+      "candidateId": "hn:49242739",
+      "title": "Over 181,000 AI meeting recordings left wide open in note taking app",
+      "urlKey": "https://bobdahacker.com/blog/tldv-hack",
+      "at": 1786380242336,
+      "subjects": [
+        "site:bobdahacker.com"
+      ]
     }
   ]
 }
