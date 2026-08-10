@@ -47,6 +47,19 @@ Your X channel is found automatically; pin `BUFFER_CHANNEL_ID` to skip the looku
 
 **Collect** — Hacker News (Algolia API), GitHub Trending, Reddit, and optionally X buzz via a third-party search API.
 
+| Source | Cost | Notes |
+|---|---|---|
+| Hacker News | free | Front page + rising stories, no key |
+| GitHub Trending | free | HTML scrape — no official API exists. Fails soft. |
+| Reddit | free | **Needs a script app** on any server — see below |
+| X | ~$0.15/1k tweets | Via twitterapi.io. Omit `XSEARCH_API_KEY` to disable. |
+
+Reddit blocks unauthenticated JSON from datacenter IPs, which is exactly where this runs. Without `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` (free, from [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)) the source works from a laptop and silently returns nothing from GitHub Actions. `SOURCES` defaults to `hn,github` for that reason.
+
+If GitHub Trending or Reddit start returning 403/429 from your host, set `TRAWL_URL` to a [TRAWL](https://trawl.germondai.com) instance. It is consulted **only** after a direct request comes back blocked — leave it unset and the code path never runs.
+
+The official X trends endpoint sits behind a five-figure monthly tier, which is why the buzz signal comes from a third-party search API instead.
+
 **Dedupe** — three layers. Canonical URL, fuzzy title match, and *subject* keys: `repo:owner/name`, `org:owner`, `site:domain`. The last one is what stops "another repo from the same lab" or "a second Docker announcement" going out in the same week. Aggregator hosts are excluded, since keying on `github.com` would block every repository.
 
 **Score** — velocity, not raw popularity. A 3-hour-old story at 135 points beats a 13-hour-old one at 613, because the first is still climbing. Per-source divisors normalise HN points against GitHub stars-today against X likes.
@@ -56,6 +69,22 @@ Your X channel is found automatically; pin `BUFFER_CHANNEL_ID` to skip the looku
 **Draft** — one LLM call. Picks an angle *before* writing to it.
 
 **Gate** — a second LLM call scoring seven criteria (understandable, funny, interesting, concise, human, accurate, memorable), plus deterministic rules. Fails **closed**: if the call errors, the post is rejected rather than published unchecked.
+
+### How posts are shaped
+
+Posts are written as **2–4 short beats separated by blank lines**, not as a paragraph:
+
+```
+An AI that codes,
+learns from its own mistakes,
+and runs unsupervised for hours.
+
+It's basically a junior dev that doesn't quit.
+```
+
+A wall of prose reads as generated no matter how good the observation is, and the break before the last line is what makes a punchline land. This is enforced deterministically — anything over 120 characters with no line break is sent back to the editor to restructure rather than being discarded.
+
+The same layer strips the phrases that mark an account as AI-written ("this isn't just…", "the future of…", "let that sink in…"), since a fixed list is cheaper and more reliable than asking a model to police itself.
 
 ---
 
