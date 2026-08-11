@@ -53,6 +53,15 @@
       "subjects": [
         "site:ft.com"
       ]
+    },
+    {
+      "candidateId": "hn:49261133",
+      "title": "Go is an ideal language for AI-assisted software engineering",
+      "urlKey": "https://developers.googleblog.com/why-go-is-an-ideal-language-for-ai-assisted-software-engineering",
+      "at": 1786480574143,
+      "subjects": [
+        "site:googleblog.com"
+      ]
     }
   ]
 }
