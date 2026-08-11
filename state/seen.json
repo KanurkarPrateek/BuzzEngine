@@ -35,6 +35,24 @@
       "subjects": [
         "site:thewalrus.ca"
       ]
+    },
+    {
+      "candidateId": "hn:49254880",
+      "title": "France to ban unsolicited telemarketing calls",
+      "urlKey": "https://lemonde.fr/en/france/article/2026/08/06/france-to-ban-unsolicited-telemarketing-calls-from-august-11_6756208_7.html",
+      "at": 1786466973778,
+      "subjects": [
+        "site:lemonde.fr"
+      ]
+    },
+    {
+      "candidateId": "hn:49243880",
+      "title": "Mark Zuckerberg attacks 'closed' AI rivals as Meta returns to open models",
+      "urlKey": "https://ft.com/content/4e3957f8-ea7c-4c46-a3de-cdce8e526878",
+      "at": 1786467014014,
+      "subjects": [
+        "site:ft.com"
+      ]
     }
   ]
 }
