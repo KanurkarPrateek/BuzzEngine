@@ -26,6 +26,15 @@
       "subjects": [
         "site:bobdahacker.com"
       ]
+    },
+    {
+      "candidateId": "hn:49250836",
+      "title": "As AI eats the web, the internet’s collective memory is disappearing",
+      "urlKey": "https://thewalrus.ca/google-search-is-dying",
+      "at": 1786452198552,
+      "subjects": [
+        "site:thewalrus.ca"
+      ]
     }
   ]
 }
