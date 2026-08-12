@@ -72,6 +72,15 @@
         "repo:stablyai/orca",
         "org:stablyai"
       ]
+    },
+    {
+      "candidateId": "hn:49271994",
+      "title": "AI is removing the middle class of software engineering?",
+      "urlKey": "https://blog.florianherrengt.com/ai-removing-middle-class-software-engineering.html",
+      "at": 1786566842379,
+      "subjects": [
+        "site:florianherrengt.com"
+      ]
     }
   ]
 }
