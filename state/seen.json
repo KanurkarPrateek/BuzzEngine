@@ -62,6 +62,16 @@
       "subjects": [
         "site:googleblog.com"
       ]
+    },
+    {
+      "candidateId": "github:stablyai/orca",
+      "title": "stablyai/orca",
+      "urlKey": "https://github.com/stablyai/orca",
+      "at": 1786538815968,
+      "subjects": [
+        "repo:stablyai/orca",
+        "org:stablyai"
+      ]
     }
   ]
 }
