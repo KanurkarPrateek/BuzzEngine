@@ -7,9 +7,10 @@ name: buzzengine
 
 on:
   schedule:
-    # Five attempts a day for three posts, so a run that finds nothing
-    # publishable still leaves two spare slots. MAX_POSTS_PER_DAY is what caps
-    # output; once three are out, later runs exit before any LLM call.
+    # Five attempts a day for three posts (one original, two quotes), so a run
+    # that finds nothing publishable still leaves spare slots. The two budgets
+    # are separate, so a busy timeline can never turn the day into all reposts;
+    # once both are spent, later runs exit before any LLM call.
     # 09:30 / 13:30 / 17:30 / 21:30 / 01:30 IST.
     - cron: "0 4,8,12,16,20 * * *"
   # Manual trigger — the "Run workflow" button on the Actions tab.
@@ -81,7 +82,8 @@ jobs:
           # still block a manual run once three posts have gone out.
           BUFFER_PUBLISH_NOW: ${{ inputs.publish_now && '1' || '0' }}
           MIN_MINUTES_BETWEEN_POSTS: ${{ inputs.ignore_cadence && '0' || '180' }}
-          MAX_POSTS_PER_DAY: ${{ inputs.ignore_cadence && '99' || secrets.MAX_POSTS_PER_DAY || '3' }}
+          MAX_POSTS_PER_DAY: ${{ inputs.ignore_cadence && '99' || secrets.MAX_POSTS_PER_DAY || '1' }}
+          MAX_QUOTES_PER_DAY: ${{ inputs.ignore_cadence && '99' || secrets.MAX_QUOTES_PER_DAY || '2' }}
         run: node src/index.ts
 
       - name: Persist dedupe memory
