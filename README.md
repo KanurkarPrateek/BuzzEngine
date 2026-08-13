@@ -1,8 +1,10 @@
 # BuzzEngine
 
-An autonomous tech trend scout that finds what's gaining traction, works out why it's interesting, writes a post a normal person would enjoy, and publishes it to X.
+### Finds what's breaking in tech, writes about it like a person, and posts it — without you.
 
-It runs on GitHub Actions and costs **nothing**.
+An autonomous X account that runs itself. It reads Hacker News, GitHub Trending, Reddit and X every few hours, works out which story is actually gaining traction, researches it, writes a post in your voice, judges its own draft, and publishes — with no approval step anywhere in the loop.
+
+It runs on GitHub Actions and costs **nothing** to operate.
 
 ```
 COLLECT ──▶ DEDUPE ──▶ SCORE ──▶ RESEARCH ──▶ DRAFT ──▶ GATE ──▶ PUBLISH
@@ -11,10 +13,40 @@ COLLECT ──▶ DEDUPE ──▶ SCORE ──▶ RESEARCH ──▶ DRAFT ─�
                                    source                + rules
 ```
 
-- **$0 to run.** X killed its free API tier in February 2026 — posting through it now costs $0.015 a post, or $0.20 with a link. BuzzEngine publishes through Buffer's free plan instead, so no X credentials and no per-post charge.
-- **Any LLM.** Anthropic, OpenAI, Gemini, or anything OpenAI-compatible — Groq, OpenRouter, Together, Azure AI Foundry, vLLM, Ollama. Two environment variables to switch.
-- **Won't embarrass you.** A seven-criteria editorial gate, deterministic content rules, subject-level deduplication, cadence caps, and a kill switch.
-- **Zero runtime dependencies.** Node 24+ runs the TypeScript directly. No build step, no bundler, nothing to install.
+## What it does
+
+**Writes original posts.** Picks the story with the most momentum, pulls the actual README or article behind it, finds an angle, and writes 2–4 short beats that read like someone typed them on a phone.
+
+**Quote-posts other people's takes.** Watches 43 curated tech accounts plus open topic search, and adds a real response above a tweet worth amplifying. Replies aren't possible — X restricted programmatic replies on every paid tier in February 2026 — so quoting is the one engagement path that's both permitted and automatable.
+
+**Judges its own work.** Every draft is scored by a second model against seven criteria and a set of deterministic rules. Most drafts don't survive. That's the point: silence beats a bad post under your name.
+
+**Never repeats itself.** Three dedupe layers — canonical URL, fuzzy title, and *subject* keys — so "another repo from the same lab" doesn't go out twice in a week.
+
+**Knows when a picture helps.** X gives attached media precedence over the link card, so attaching a repo's og:image actively makes the post worse. It only attaches an image the card wouldn't already show.
+
+## What it costs
+
+| | |
+|---|---|
+| Hosting | **$0** — GitHub Actions free tier |
+| Publishing | **$0** — Buffer's free plan holds the X relationship |
+| LLM | Your key. ~15 calls/day; pennies on a cheap model, free on a local one |
+| X buzz (optional) | ~$1–3/month via third-party search — the only paid piece |
+
+X killed its free API tier in February 2026: posting now costs $0.015, or $0.20 with a link. BuzzEngine never touches X's API.
+
+## Why it doesn't read as a bot
+
+Posts are written as short beats with line breaks, not paragraphs. A fixed list of AI tells is stripped deterministically. No hashtags, no emoji, no engagement bait. Output is capped at **3 posts a day** with 3 hours of spacing, because volume is what makes an account look automated.
+
+## Built on
+
+**Any LLM** — Anthropic, OpenAI, Gemini, or anything OpenAI-compatible: Groq, OpenRouter, Together, Azure AI Foundry, vLLM, Ollama. Two environment variables to switch, every adapter raw HTTP, no SDK, no lock-in.
+
+**Zero runtime dependencies** — Node 24+ runs the TypeScript directly. No build step, no bundler, nothing to install.
+
+**Runs anywhere** — GitHub Actions, cron, Docker, or a Kubernetes CronJob. One process, one cycle, exits.
 
 ---
 
@@ -70,6 +102,24 @@ The official X trends endpoint sits behind a five-figure monthly tier, which is 
 
 **Gate** — a second LLM call scoring seven criteria (understandable, funny, interesting, concise, human, accurate, memorable), plus deterministic rules. Fails **closed**: if the call errors, the post is rejected rather than published unchecked.
 
+### Originals and quotes
+
+A candidate's source decides what kind of post it becomes: anything from X becomes a **quote post**, everything else an **original**. The two have separate daily budgets — `MAX_POSTS_PER_DAY` (1) and `MAX_QUOTES_PER_DAY` (2) — and an exhausted budget skips those candidates rather than ending the run.
+
+They're budgeted separately on purpose. Sharing one pool would let a busy timeline turn a whole day's output into reposts, and X treats bulk reposting as spam. Amplification can never crowd out original writing.
+
+Quote posts skip the link and the image — the embedded tweet *is* the visual — and the writer is told explicitly that its text appears *above* someone else's post, which readers can already see. Without that framing a model summarises the tweet, which is the classic bad quote post.
+
+`FOLLOW_HANDLES` is a discovery source, not a targeting list. Curated accounts clear a lower engagement bar (`XSEARCH_HANDLE_MIN_LIKES`, default 60) because *who said it* is the signal — but every candidate still faces the same gate. Systematically quote-posting a fixed set of accounts for reach is the engagement farming X prohibits.
+
+To quote a specific tweet by hand:
+
+```bash
+node src/scripts/quote.ts <tweet-url-or-id> "<what the tweet says>"
+```
+
+**Replies are not supported, by design.** X restricted programmatic replies on Free, Basic, Pro and Pay-Per-Use in February 2026 — an automated app can only reply if the author @mentions or quote-posts it first. No amount of credentials changes this.
+
 ### How posts are shaped
 
 Posts are written as **2–4 short beats separated by blank lines**, not as a paragraph:
@@ -119,7 +169,7 @@ Body images are filtered for page furniture (logos, banners, avatars, spacers) a
 
 ### GitHub Actions (recommended)
 
-`.github/workflows/run.yml` runs three times daily — 04:00, 12:00 and 17:00 UTC — and commits its dedupe memory back to the repo.
+`.github/workflows/run.yml` runs five times daily — 04:00, 08:00, 12:00, 16:00 and 20:00 UTC — and commits its dedupe memory back to the repo. Five attempts for three slots, so a run that finds nothing publishable doesn't cost you the day's output.
 
 Add these as repository **secrets** (Settings → Secrets and variables → Actions). The workflow reads everything as a secret, nothing as a variable, so no configuration appears in plain text:
 
@@ -128,7 +178,9 @@ BUFFER_API_KEY      BUFFER_CHANNEL_ID
 LLM_API_KEY         LLM_BASE_URL         LLM_MODEL
 ```
 
-Everything else has a working default. Optional: `LLM_MAX_TOKENS`, `SOURCES`, `TOPICS`, `QUALITY_THRESHOLD`, `MAX_POSTS_PER_DAY`, `MEDIA_MODE`, `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET`.
+Everything else has a working default. Optional: `LLM_MAX_TOKENS`, `SOURCES`, `TOPICS`, `QUALITY_THRESHOLD`, `MAX_POSTS_PER_DAY`, `MAX_QUOTES_PER_DAY`, `MEDIA_MODE`, `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET`.
+
+**Quote posts need `XSEARCH_API_KEY`.** Without it the X source returns nothing, no quote candidates ever reach the pipeline, and the two quote slots go unused every day — you get the single original and nothing else.
 
 **Manual trigger:** Actions → buzzengine → **Run workflow**, with three toggles:
 
@@ -136,7 +188,7 @@ Everything else has a working default. Optional: `LLM_MAX_TOKENS`, `SOURCES`, `T
 |---|---|---|
 | Dry run | on | Drafts and gates, publishes nothing |
 | Publish straight to X | off | Skips Buffer's queue — goes live immediately |
-| Ignore cadence | off | Lifts the daily cap *and* the 3-hour spacing |
+| Ignore cadence | off | Lifts **both** daily budgets *and* the 3-hour spacing |
 
 Tick **ignore cadence** whenever you want a post on demand. Without it, a manual run within 3 hours of a post exits with `cadence: too soon` and does nothing.
 
@@ -175,9 +227,10 @@ The endpoint and model name are never logged — both identify a private resourc
 |---|---|
 | `DRY_RUN=1` | Full pipeline, logs the post, publishes nothing |
 | `state/PAUSED` | Create this file and the bot halts before doing anything |
-| `MAX_POSTS_PER_DAY` / `MIN_MINUTES_BETWEEN_POSTS` | Enforced in code from real post history |
+| `MAX_POSTS_PER_DAY` / `MAX_QUOTES_PER_DAY` | Separate daily budgets for originals and quotes |
+| `MIN_MINUTES_BETWEEN_POSTS` | Spacing across *both* kinds, enforced from real post history |
 | `SUBJECT_COOLDOWN_DAYS` | Days before the same repo, org or company can appear again |
-| `QUALITY_THRESHOLD` | Minimum score (1–10) required in **every** category |
+| `QUALITY_THRESHOLD` / `ACCURACY_THRESHOLD` | Minimum score per category — accuracy is held to a higher bar (8) than taste (5) |
 | `BLOCKED_TERMS` | Drops candidates and rejects drafts containing these |
 | Deterministic rules | Length (URL-aware), no hashtags, no emoji, no @-mentions, no invented URLs, no AI-tell phrases, no wall-of-prose |
 
@@ -193,7 +246,7 @@ The personality lives in `src/prompts.ts`, not in config — mission, voice, the
 
 `npm run probe:sources` shows the ranking without spending a token.
 
-Expect **1–2 posts a day**, not 3. The gate is strict, the subject cooldown is strict, and silence is preferred to filler.
+Expect **1–2 posts a day**, not 3. The gate is strict, the subject cooldown is strict, and silence is preferred to filler. Three is a ceiling, never a quota.
 
 ---
 
@@ -208,6 +261,7 @@ src/
   sources/          hn, github, reddit, xsearch
   pipeline/         collect → dedupe → score → enrich → draft → gate
   publish/          buffer, X web intent
+  scripts/          manual quote-post entry point
   notify/           WhatsApp delivery for the review-and-tap mode
   media/            image selection
   x/                OAuth + media upload, for the direct API mode
