@@ -80,21 +80,45 @@ export async function fetchXBuzz(): Promise<Candidate[]> {
 }
 
 /**
- * Group topics into a few OR-ed queries rather than one query per topic —
- * each request is billed, so fewer, broader queries cost less and return more.
+ * Builds the search queries. Each request is billed, so handles and topics are
+ * batched into as few OR-ed queries as the operator length allows.
  */
 function buildQueries(minLikes: number, sinceEpoch: number): string[] {
-  const topics = config.editorial.topics;
-  const groupSize = 4;
-  const filters = `min_faves:${minLikes} -filter:replies -filter:retweets lang:en since_time:${sinceEpoch}`;
-
+  const base = `-filter:replies -filter:retweets lang:en since_time:${sinceEpoch}`;
   const queries: string[] = [];
-  for (let i = 0; i < topics.length; i += groupSize) {
-    const group = topics
-      .slice(i, i + groupSize)
-      .map((t) => `"${t}"`)
-      .join(" OR ");
-    queries.push(`(${group}) ${filters}`);
+
+  // Curated accounts first: a known voice clears a lower engagement bar than
+  // an anonymous viral post, because the signal is who said it.
+  const handles = config.sources.x.handles;
+  if (handles.length > 0) {
+    const handleFilters = `min_faves:${config.sources.x.handleMinLikes} ${base}`;
+    for (const group of chunkByLength(handles.map((h) => `from:${h}`), 380)) {
+      queries.push(`(${group.join(" OR ")}) ${handleFilters}`);
+    }
   }
+
+  // Then open topic search, which needs a higher bar to be worth reading.
+  const topicFilters = `min_faves:${minLikes} ${base}`;
+  for (const group of chunkByLength(config.editorial.topics.map((t) => `"${t}"`), 300)) {
+    queries.push(`(${group.join(" OR ")}) ${topicFilters}`);
+  }
+
   return queries;
+}
+
+/** X caps search operators around 512 characters; stay well inside it. */
+function chunkByLength(terms: string[], maxChars: number): string[][] {
+  const chunks: string[][] = [];
+  let current: string[] = [];
+  for (const term of terms) {
+    const candidate = [...current, term];
+    if (current.length > 0 && candidate.join(" OR ").length > maxChars) {
+      chunks.push(current);
+      current = [term];
+    } else {
+      current = candidate;
+    }
+  }
+  if (current.length > 0) chunks.push(current);
+  return chunks;
 }

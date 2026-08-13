@@ -112,13 +112,31 @@ export type BufferPostResult = {
   dueAt?: string;
 };
 
+export type CreatePostOptions = {
+  imageUrls?: string[];
+  /**
+   * Quote-post the given tweet instead of posting standalone. Buffer resolves
+   * the tweet server-side, so only the id is needed.
+   *
+   * Quote posts are permitted by X's automation rules for informational
+   * purposes; replies are not — X restricted programmatic replies on every
+   * paid tier in February 2026, so there is deliberately no reply option here.
+   */
+  quoteTweetId?: string;
+};
+
 export async function createPost(
   text: string,
-  imageUrls: string[] = [],
+  options: CreatePostOptions = {},
 ): Promise<BufferPostResult> {
+  const { imageUrls = [], quoteTweetId } = options;
   const channelId = await resolveChannelId();
 
   const input: Record<string, unknown> = { text, channelId };
+
+  if (quoteTweetId) {
+    input.metadata = { twitter: { retweet: { id: quoteTweetId, comment: text } } };
+  }
 
   // Buffer attaches images by public URL — there is no upload step. X caps a
   // post at 4 images, so anything beyond that is dropped rather than rejected.
@@ -164,6 +182,7 @@ export async function createPost(
     postId: result.post.id,
     dueAt: result.post.dueAt,
     images: imageUrls.length,
+    quoting: quoteTweetId ?? undefined,
   });
   return { id: result.post.id, dueAt: result.post.dueAt };
 }

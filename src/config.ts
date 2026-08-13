@@ -162,6 +162,16 @@ export const config = {
       minLikes: num("XSEARCH_MIN_LIKES", 400),
       lookbackHours: num("XSEARCH_LOOKBACK_HOURS", 18),
       maxQueries: num("XSEARCH_MAX_QUERIES", 3),
+      /**
+       * Curated accounts worth watching. Treated as a discovery source — the
+       * same quality gate applies as to any other candidate, so a tweet from
+       * this list still has to earn a post. It is deliberately not a targeting
+       * list: systematically quote-posting a fixed set of influencers for
+       * reach is the engagement farming X's rules prohibit.
+       */
+      handles: list("FOLLOW_HANDLES", "100xdevs,akshaymarch7,ankitkr0,arpit_bhayani,ashishps_1,AvinashSingh_20,carrycooldude,codewithharry,devtoolsacademy,dhaiwat,fossunited,gautamkrishnar,GeekyAnts,ghumare64,gkcs_,heyeaswar,Hiteshdotcom,iSahilSharma,jdkanani,kirat_tw,knadh,kunal0kushwaha,kunalstwt,liyasthomas,lovebabbar3,mvkaran,Nithin0dha,OrkoHunter,Prathkum,priyankaraina,priyansh_31dec,ravixpanchal,rushabh_mehta,s0md3v,SaiyamPathak,SantoshYadavDev,saurabhnemade,snitin315,striver_79,tanmaigo,theankurtyagi,thepratiksha,ThePSF".split(",")),
+      /** Minimum likes for a followed account's tweet — lower than the open-search bar. */
+      handleMinLikes: num("XSEARCH_HANDLE_MIN_LIKES", 60),
     },
   },
 
@@ -237,7 +247,14 @@ export const config = {
   },
 
   limits: {
-    maxPostsPerDay: num("MAX_POSTS_PER_DAY", 3),
+    /** Original posts — the account's own writing about a story. */
+    maxPostsPerDay: num("MAX_POSTS_PER_DAY", 1),
+    /**
+     * Quote posts — someone else's tweet with our take on it. Budgeted
+     * separately so amplification can never crowd out original writing, and
+     * so the total stays modest: X treats bulk reposting as spam.
+     */
+    maxQuotesPerDay: num("MAX_QUOTES_PER_DAY", 2),
     minMinutesBetweenPosts: num("MIN_MINUTES_BETWEEN_POSTS", 180),
     /**
      * Ranked candidates tried per run before giving up.

@@ -22,36 +22,54 @@ import { subjectsOf } from "./pipeline/subjects.ts";
 import { canonicalUrl } from "./util/text.ts";
 import { log } from "./util/log.ts";
 import { sleep } from "./util/http.ts";
-import type { HistoryEntry, ScoredCandidate } from "./types.ts";
+import type { HistoryEntry, PostKind, ScoredCandidate } from "./types.ts";
 
 type RunOutcome = "posted" | "skipped" | "paused" | "rate-limited" | "no-candidates";
 
-/** Returns false with a logged reason when posting now would break a cadence rule. */
-function cadenceAllows(): boolean {
-  const history = readHistory().filter((h) => !h.dryRun);
+/** A tweet becomes a quote post; anything else is written about from scratch. */
+function kindOf(candidate: ScoredCandidate): PostKind {
+  return candidate.source === "x" ? "quote" : "original";
+}
 
+type Budget = { original: number; quote: number };
+
+/**
+ * Remaining budget for each kind today.
+ *
+ * Originals and quotes are counted separately so amplifying other people can
+ * never crowd out the account's own writing — and so a busy timeline cannot
+ * turn the whole day's output into reposts, which is what X treats as spam.
+ */
+function remainingBudget(): Budget {
   const dayAgo = Date.now() - 86_400_000;
-  const today = history.filter((h) => Date.parse(h.at) >= dayAgo);
-  if (today.length >= config.limits.maxPostsPerDay) {
-    log.info("cadence: daily cap reached", {
-      posts: today.length,
-      cap: config.limits.maxPostsPerDay,
+  const today = readHistory()
+    .filter((h) => !h.dryRun)
+    .filter((h) => Date.parse(h.at) >= dayAgo);
+
+  const used = { original: 0, quote: 0 };
+  for (const h of today) used[h.kind === "quote" ? "quote" : "original"]++;
+
+  return {
+    original: Math.max(0, config.limits.maxPostsPerDay - used.original),
+    quote: Math.max(0, config.limits.maxQuotesPerDay - used.quote),
+  };
+}
+
+/** Spacing applies across every kind, so posts never bunch up. */
+function spacingAllows(): boolean {
+  const last = readHistory()
+    .filter((h) => !h.dryRun)
+    .at(-1);
+  if (!last) return true;
+
+  const minutesSince = (Date.now() - Date.parse(last.at)) / 60_000;
+  if (minutesSince < config.limits.minMinutesBetweenPosts) {
+    log.info("cadence: too soon since last post", {
+      minutesSince: Math.round(minutesSince),
+      required: config.limits.minMinutesBetweenPosts,
     });
     return false;
   }
-
-  const last = history.at(-1);
-  if (last) {
-    const minutesSince = (Date.now() - Date.parse(last.at)) / 60_000;
-    if (minutesSince < config.limits.minMinutesBetweenPosts) {
-      log.info("cadence: too soon since last post", {
-        minutesSince: Math.round(minutesSince),
-        required: config.limits.minMinutesBetweenPosts,
-      });
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -62,7 +80,21 @@ export async function runOnce(): Promise<RunOutcome> {
     log.warn("paused: remove the PAUSED file in the state directory to resume");
     return "paused";
   }
-  if (!config.dryRun && !cadenceAllows()) return "rate-limited";
+  const budget = config.dryRun
+    ? { original: 99, quote: 99 }
+    : remainingBudget();
+
+  if (!config.dryRun) {
+    if (budget.original === 0 && budget.quote === 0) {
+      log.info("cadence: daily caps reached", {
+        originals: config.limits.maxPostsPerDay,
+        quotes: config.limits.maxQuotesPerDay,
+      });
+      return "rate-limited";
+    }
+    if (!spacingAllows()) return "rate-limited";
+  }
+  log.info("budget remaining today", budget);
 
   const candidates = await collect();
   const fresh = dedupe(candidates);
@@ -79,6 +111,12 @@ export async function runOnce(): Promise<RunOutcome> {
 
   for (let i = 0; i < attempts; i++) {
     const candidate = ranked[i];
+
+    // A candidate whose kind is exhausted is skipped, not consumed — the run
+    // continues looking for one it can still publish.
+    const kind = kindOf(candidate);
+    if (budget[kind] === 0) continue;
+
     log.info("attempting candidate", {
       rank: i + 1,
       id: candidate.id,
@@ -106,6 +144,8 @@ export async function runOnce(): Promise<RunOutcome> {
       continue;
     }
 
+    const quotedTweetId = kind === "quote" ? candidate.id.replace(/^x:/, "") : undefined;
+
     const entry: HistoryEntry = {
       at: new Date().toISOString(),
       candidateId: candidate.id,
@@ -114,6 +154,8 @@ export async function runOnce(): Promise<RunOutcome> {
       url: candidate.url,
       score: candidate.score,
       post: text,
+      kind,
+      quotedTweetId,
       dryRun: config.dryRun,
     };
 
@@ -147,7 +189,7 @@ export async function runOnce(): Promise<RunOutcome> {
       // A link in the post means X renders its own card, so only a genuinely
       // different image is worth attaching — see selectAttachableImages.
       const imageUrls =
-        config.media.mode === "off"
+        config.media.mode === "off" || kind === "quote"
           ? []
           : await selectAttachableImages(
               candidate.url,
@@ -157,10 +199,15 @@ export async function runOnce(): Promise<RunOutcome> {
 
       // Buffer publishes to X on our behalf, so no X credentials are involved
       // and the link carries no surcharge.
-      const queued = await createPost(
-        config.editorial.linkMode === "main" ? `${text}\n\n${candidate.url}` : text,
-        imageUrls,
-      );
+      // A quote post embeds the original tweet, so no link is appended and no
+      // image is attached — the quoted post is the visual.
+      const queued =
+        kind === "quote"
+          ? await createPost(text, { quoteTweetId: quotedTweetId })
+          : await createPost(
+              config.editorial.linkMode === "main" ? `${text}\n\n${candidate.url}` : text,
+              { imageUrls },
+            );
 
       entry.bufferPostId = queued.id;
       appendHistory(entry);

@@ -1,5 +1,7 @@
 export type SourceName = "hn" | "github" | "reddit" | "x";
 
+export type PostKind = "original" | "quote";
+
 /** A single story/repo/post that could become a tweet. */
 export type Candidate = {
   /** Stable identity within its source, e.g. "hn:38912345". */
@@ -59,6 +61,10 @@ export type HistoryEntry = {
   url: string;
   score: number;
   post: string;
+  /** Original writing, or a quote post responding to someone else's tweet. */
+  kind: PostKind;
+  /** The tweet being quoted, when kind is "quote". */
+  quotedTweetId?: string;
   /** Set when published via the X API. */
   tweetId?: string;
   /** Set when delivered for a human tap instead of auto-published. */

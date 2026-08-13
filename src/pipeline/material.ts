@@ -10,7 +10,12 @@ import type { ScoredCandidate } from "../types.ts";
  * builder makes that class of mismatch impossible rather than merely unlikely.
  */
 export function buildMaterial(candidate: ScoredCandidate): string {
+  const isQuote = candidate.source === "x";
+
   return [
+    isQuote
+      ? "FORMAT: quote post — your text appears ABOVE someone else's post, which readers can see. Respond to their point; do not restate it."
+      : "FORMAT: original post about a story.",
     `SOURCE: ${candidate.source}`,
     `TITLE: ${candidate.title}`,
     `URL: ${candidate.url}`,
