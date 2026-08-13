@@ -81,6 +81,25 @@
       "subjects": [
         "site:florianherrengt.com"
       ]
+    },
+    {
+      "candidateId": "hn:49274027",
+      "title": "Grok 4.6",
+      "urlKey": "https://x.ai/news/grok-4-6",
+      "at": 1786598904019,
+      "subjects": [
+        "site:x.ai"
+      ]
+    },
+    {
+      "candidateId": "github:cathrynlavery/diagram-design",
+      "title": "cathrynlavery/diagram-design",
+      "urlKey": "https://github.com/cathrynlavery/diagram-design",
+      "at": 1786598945655,
+      "subjects": [
+        "repo:cathrynlavery/diagram-design",
+        "org:cathrynlavery"
+      ]
     }
   ]
 }
