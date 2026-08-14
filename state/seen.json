@@ -100,6 +100,15 @@
         "repo:cathrynlavery/diagram-design",
         "org:cathrynlavery"
       ]
+    },
+    {
+      "candidateId": "hn:49289112",
+      "title": "Gemini 3.7 Flash",
+      "urlKey": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash",
+      "at": 1786698005069,
+      "subjects": [
+        "site:blog.google"
+      ]
     }
   ]
 }
