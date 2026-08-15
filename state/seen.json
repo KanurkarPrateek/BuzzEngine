@@ -109,6 +109,24 @@
       "subjects": [
         "site:blog.google"
       ]
+    },
+    {
+      "candidateId": "hn:49303202",
+      "title": "Firefox is now the last major browser that still supports uBlock Origin",
+      "urlKey": "https://pcworld.com/article/3212428/firefox-is-now-the-last-major-browser-that-still-supports-ublock-origin.html",
+      "at": 1786796361830,
+      "subjects": [
+        "site:pcworld.com"
+      ]
+    },
+    {
+      "candidateId": "hn:49299605",
+      "title": "Qwen 3.8 27B",
+      "urlKey": "https://huggingface.co/Qwen/Qwen3.8-27B-FP8",
+      "at": 1786796429113,
+      "subjects": [
+        "site:huggingface.co"
+      ]
     }
   ]
 }
