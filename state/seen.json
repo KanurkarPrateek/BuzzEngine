@@ -127,6 +127,15 @@
       "subjects": [
         "site:huggingface.co"
       ]
+    },
+    {
+      "candidateId": "hn:49312845",
+      "title": "AI has access to a vastly larger working memory than the human brain",
+      "urlKey": "https://davidepiffer.com/p/ai-isnt-outthinking-mathematicians",
+      "at": 1786896874838,
+      "subjects": [
+        "site:davidepiffer.com"
+      ]
     }
   ]
 }
