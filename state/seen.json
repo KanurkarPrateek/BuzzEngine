@@ -136,6 +136,15 @@
       "subjects": [
         "site:davidepiffer.com"
       ]
+    },
+    {
+      "candidateId": "hn:49330684",
+      "title": "Incident with Github.com",
+      "urlKey": "https://githubstatus.com/incidents/zkxwbgr0cnmx",
+      "at": 1786983419491,
+      "subjects": [
+        "site:githubstatus.com"
+      ]
     }
   ]
 }
