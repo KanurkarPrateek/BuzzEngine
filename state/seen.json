@@ -145,6 +145,15 @@
       "subjects": [
         "site:githubstatus.com"
       ]
+    },
+    {
+      "candidateId": "hn:49336573",
+      "title": "AI;DR (AI; Didn't Read)",
+      "urlKey": "https://rickmanelius.com/p/aidr-ai-didnt-read",
+      "at": 1787070084798,
+      "subjects": [
+        "site:rickmanelius.com"
+      ]
     }
   ]
 }
