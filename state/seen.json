@@ -154,6 +154,16 @@
       "subjects": [
         "site:rickmanelius.com"
       ]
+    },
+    {
+      "candidateId": "github:harry0703/MoneyPrinterTurbo",
+      "title": "harry0703/MoneyPrinterTurbo",
+      "urlKey": "https://github.com/harry0703/MoneyPrinterTurbo",
+      "at": 1787170634206,
+      "subjects": [
+        "repo:harry0703/moneyprinterturbo",
+        "org:harry0703"
+      ]
     }
   ]
 }
