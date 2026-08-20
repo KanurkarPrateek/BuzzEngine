@@ -164,6 +164,35 @@
         "repo:harry0703/moneyprinterturbo",
         "org:harry0703"
       ]
+    },
+    {
+      "candidateId": "hn:49371857",
+      "title": "Don't paste the AI, please",
+      "urlKey": "https://dontpastetheai.com/",
+      "at": 1787257132058,
+      "subjects": [
+        "site:dontpastetheai.com"
+      ]
+    },
+    {
+      "candidateId": "github:mattpocock/skills",
+      "title": "mattpocock/skills",
+      "urlKey": "https://github.com/mattpocock/skills",
+      "at": 1787257194063,
+      "subjects": [
+        "repo:mattpocock/skills",
+        "org:mattpocock"
+      ]
+    },
+    {
+      "candidateId": "github:volcengine/OpenViking",
+      "title": "volcengine/OpenViking",
+      "urlKey": "https://github.com/volcengine/OpenViking",
+      "at": 1787257251813,
+      "subjects": [
+        "repo:volcengine/openviking",
+        "org:volcengine"
+      ]
     }
   ]
 }
