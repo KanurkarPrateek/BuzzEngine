@@ -193,6 +193,15 @@
         "repo:volcengine/openviking",
         "org:volcengine"
       ]
+    },
+    {
+      "candidateId": "hn:49390427",
+      "title": "Kobo can run apps now",
+      "urlKey": "https://bandarlabs.github.io/Cobalt",
+      "at": 1787372670326,
+      "subjects": [
+        "site:github.io"
+      ]
     }
   ]
 }
