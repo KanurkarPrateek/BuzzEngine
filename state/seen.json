@@ -202,6 +202,16 @@
       "subjects": [
         "site:github.io"
       ]
+    },
+    {
+      "candidateId": "github:openai/codex",
+      "title": "openai/codex",
+      "urlKey": "https://github.com/openai/codex",
+      "at": 1787459331772,
+      "subjects": [
+        "repo:openai/codex",
+        "org:openai"
+      ]
     }
   ]
 }
