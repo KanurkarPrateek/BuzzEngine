@@ -212,6 +212,16 @@
         "repo:openai/codex",
         "org:openai"
       ]
+    },
+    {
+      "candidateId": "github:affaan-m/ECC",
+      "title": "affaan-m/ECC",
+      "urlKey": "https://github.com/affaan-m/ECC",
+      "at": 1787546202735,
+      "subjects": [
+        "repo:affaan-m/ecc",
+        "org:affaan-m"
+      ]
     }
   ]
 }
