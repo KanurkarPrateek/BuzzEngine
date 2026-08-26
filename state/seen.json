@@ -231,6 +231,15 @@
       "subjects": [
         "site:larsfaye.com"
       ]
+    },
+    {
+      "candidateId": "hn:49446422",
+      "title": "Z.ai confirms Ox Alpha is a new GLM-series model and will release its weights",
+      "urlKey": "https://bloomberg.com/news/articles/2026-08-26/china-s-z-ai-made-ox-alpha-stealth-model-that-rivals-deepseek",
+      "at": 1787747600398,
+      "subjects": [
+        "site:bloomberg.com"
+      ]
     }
   ]
 }
