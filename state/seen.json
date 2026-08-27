@@ -240,6 +240,25 @@
       "subjects": [
         "site:bloomberg.com"
       ]
+    },
+    {
+      "candidateId": "hn:49458418",
+      "title": "CEO fired developers to make room for AI. Developers create open source AI CEO",
+      "urlKey": "https://github.com/SenteLabsAI/OpenExecutive",
+      "at": 1787842382359,
+      "subjects": [
+        "repo:sentelabsai/openexecutive",
+        "org:sentelabsai"
+      ]
+    },
+    {
+      "candidateId": "hn:49458161",
+      "title": "Nvidia agrees to acquire Hugging Face for $13B",
+      "urlKey": "https://businessinsider.com/nvidia-in-talks-to-buy-hugging-face-13-billion-dollars-2026-8",
+      "at": 1787842493328,
+      "subjects": [
+        "site:businessinsider.com"
+      ]
     }
   ]
 }
