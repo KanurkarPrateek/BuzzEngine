@@ -259,6 +259,16 @@
       "subjects": [
         "site:businessinsider.com"
       ]
+    },
+    {
+      "candidateId": "github:bilawalsidhu/gods-eye-view",
+      "title": "bilawalsidhu/gods-eye-view",
+      "urlKey": "https://github.com/bilawalsidhu/gods-eye-view",
+      "at": 1787932088557,
+      "subjects": [
+        "repo:bilawalsidhu/gods-eye-view",
+        "org:bilawalsidhu"
+      ]
     }
   ]
 }
