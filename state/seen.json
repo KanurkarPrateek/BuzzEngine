@@ -269,6 +269,15 @@
         "repo:bilawalsidhu/gods-eye-view",
         "org:bilawalsidhu"
       ]
+    },
+    {
+      "candidateId": "hn:49489982",
+      "title": "Debian votes to allow \"responsible use of generative AI\"",
+      "urlKey": "https://lwn.net/Articles/1091231",
+      "at": 1788019087042,
+      "subjects": [
+        "site:lwn.net"
+      ]
     }
   ]
 }
