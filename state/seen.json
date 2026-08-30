@@ -278,6 +278,15 @@
       "subjects": [
         "site:lwn.net"
       ]
+    },
+    {
+      "candidateId": "hn:49498095",
+      "title": "No AI Fridays",
+      "urlKey": "https://noaifridays.com/",
+      "at": 1788116248330,
+      "subjects": [
+        "site:noaifridays.com"
+      ]
     }
   ]
 }
