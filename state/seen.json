@@ -287,6 +287,16 @@
       "subjects": [
         "site:noaifridays.com"
       ]
+    },
+    {
+      "candidateId": "github:K-Dense-AI/scientific-agent-skills",
+      "title": "K-Dense-AI/scientific-agent-skills",
+      "urlKey": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "at": 1788219144006,
+      "subjects": [
+        "repo:k-dense-ai/scientific-agent-skills",
+        "org:k-dense-ai"
+      ]
     }
   ]
 }
