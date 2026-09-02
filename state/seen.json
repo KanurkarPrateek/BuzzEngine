@@ -297,6 +297,15 @@
         "repo:k-dense-ai/scientific-agent-skills",
         "org:k-dense-ai"
       ]
+    },
+    {
+      "candidateId": "hn:49526069",
+      "title": "How accurate have Ed Zitron's AI skeptic predictions been?",
+      "urlKey": "https://danluu.com/zitron",
+      "at": 1788336952641,
+      "subjects": [
+        "site:danluu.com"
+      ]
     }
   ]
 }
