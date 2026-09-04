@@ -315,6 +315,25 @@
       "subjects": [
         "site:meta.com"
       ]
+    },
+    {
+      "candidateId": "hn:49554643",
+      "title": "GPT-6 Astra",
+      "urlKey": "https://openai.com/index/gpt-6-astra",
+      "at": 1788535723158,
+      "subjects": [
+        "site:openai.com"
+      ]
+    },
+    {
+      "candidateId": "github:DietrichGebert/ponytail",
+      "title": "DietrichGebert/ponytail",
+      "urlKey": "https://github.com/DietrichGebert/ponytail",
+      "at": 1788535865254,
+      "subjects": [
+        "repo:dietrichgebert/ponytail",
+        "org:dietrichgebert"
+      ]
     }
   ]
 }
