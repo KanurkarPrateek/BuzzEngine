@@ -334,6 +334,15 @@
         "repo:dietrichgebert/ponytail",
         "org:dietrichgebert"
       ]
+    },
+    {
+      "candidateId": "hn:49563355",
+      "title": "Discovery of a new OpenAI agent message board",
+      "urlKey": "https://collusion.wiki/",
+      "at": 1788630560740,
+      "subjects": [
+        "site:collusion.wiki"
+      ]
     }
   ]
 }
