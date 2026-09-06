@@ -343,6 +343,15 @@
       "subjects": [
         "site:collusion.wiki"
       ]
+    },
+    {
+      "candidateId": "hn:49586171",
+      "title": "QBittorrent breaks out of sandbox to commit crimes",
+      "urlKey": "https://beige.party/@intransitivelie/117057396732763183",
+      "at": 1788717251834,
+      "subjects": [
+        "site:beige.party"
+      ]
     }
   ]
 }
